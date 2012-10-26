@@ -1,3 +1,16 @@
+# Why I fork Jedis
+
+Jedis is a famous java client for redis, which is recommended by the redis official. When I walk though the code, I decided to fork
+it. There are some reasons:
+
+1.To use jedis, we must know redis commands well. But on most conditions, we just use it as the cache or the queue, which only demands the developers to know set/get and push/pop operations.
+
+2.Redis provides more good data structures, compared with memecached. If we want to use redis well, we must know the traditional ways of 
+different data structures, e.g. use HASHES to store objects, use SortedSet to store priority list, and etc.
+
+So, I want to make a jedis wrapper, which developers could use redis easily.
+
+
 # Jedis
 
 Jedis is a blazingly small and sane [Redis](http://github.com/antirez/redis "Redis") java client.
