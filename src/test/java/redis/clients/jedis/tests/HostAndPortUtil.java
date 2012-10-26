@@ -11,15 +11,15 @@ public class HostAndPortUtil {
 
     static {
         final HostAndPort defaulthnp1 = new HostAndPort();
-        defaulthnp1.host = "localhost";
+        defaulthnp1.host = "10.1.81.194";
         defaulthnp1.port = Protocol.DEFAULT_PORT;
         hostAndPortList.add(defaulthnp1);
-
+/*
         final HostAndPort defaulthnp2 = new HostAndPort();
         defaulthnp2.host = "localhost";
         defaulthnp2.port = Protocol.DEFAULT_PORT + 1;
         hostAndPortList.add(defaulthnp2);
-
+*/
         final String envHosts = System.getProperty("redis-hosts");
         if (null != envHosts && 0 < envHosts.length()) {
             final String[] hostDefs = envHosts.split(",");

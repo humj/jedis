@@ -25,11 +25,13 @@ public abstract class JedisCommandTestBase extends JedisTestBase {
 
     @Before
     public void setUp() throws Exception {
+    	/*
         jedis = new Jedis(hnp.host, hnp.port, 500);
         jedis.connect();
         jedis.auth("foobared");
         jedis.configSet("timeout", "300");
         jedis.flushAll();
+        */
     }
 
     @After

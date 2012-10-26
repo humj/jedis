@@ -5,19 +5,18 @@ package redis.clients.jedis.wrapper;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import redis.clients.jedis.Jedis;
 import redis.clients.jedis.ShardedJedis;
 import redis.clients.jedis.ShardedJedisPool;
+import redis.clients.jedis.Tuple;
 import redis.clients.util.JedisAssert;
 
 /**
  * 
  * An generic cache wrapper for easy-use
  * 
- * @author joey
- * 
- */
-/**
  * @author joey
  * 
  */
@@ -260,8 +259,7 @@ public class GenericCacheWrapper implements CacheWrapper {
 	 */
 	public String leftPopList(String key) throws Exception {
 		JedisAssert.assertNotNulls(key);
-		String resp = this.jedis.lpop(key);
-		return resp.equals("nil") ? null : resp;
+		return this.jedis.lpop(key);
 	}
 
 	/**
@@ -275,8 +273,7 @@ public class GenericCacheWrapper implements CacheWrapper {
 	 */
 	public String rightPopList(String key) throws Exception {
 		JedisAssert.assertNotNulls(key);
-		String resp = this.jedis.rpop(key);
-		return resp.equals("nil") ? null : resp;
+		return this.jedis.rpop(key);
 	}
 
 /**
@@ -398,6 +395,7 @@ public class GenericCacheWrapper implements CacheWrapper {
 	 */
 	private Long removeElementsEqualsToInList(String key, long count,
 			String value) throws Exception {
+		JedisAssert.assertNotNulls(key, value, count);
 		return this.jedis.lrem(key, count, value);
 	}
 
@@ -410,7 +408,241 @@ public class GenericCacheWrapper implements CacheWrapper {
 	 * @throws Exception
 	 */
 	public Long getListLength(String key) throws Exception {
+		JedisAssert.assertNotNulls(key);
 		return this.jedis.llen(key);
+	}
+
+	/**
+	 * Add the specified member having the specifeid score to the sorted set
+	 * stored at key. If member is already a member of the sorted set the score
+	 * is updated, and the element reinserted in the right position to ensure
+	 * sorting.
+	 * 
+	 * @param key
+	 * @param score
+	 * @param member
+	 * @return Integer reply, specifically: 1 if the new element was added 0 if
+	 *         the element was already a member of the sorted set and the score
+	 *         was updated
+	 * @throws Exception
+	 */
+	public Long appendZSet(String key, double score, String member)
+			throws Exception {
+		JedisAssert.assertNotNulls(key, score, member);
+		return this.jedis.zadd(key, score, member);
+	}
+
+	/**
+	 * Adds all the specified members with the specified scores to the sorted
+	 * set stored at key. It is possible to specify multiple score/member pairs.
+	 * If a specified member is already a member of the sorted set, the score is
+	 * updated and the element reinserted at the right position to ensure the
+	 * correct ordering.
+	 * 
+	 * @param key
+	 * @param scoreMembers
+	 * @return The number of elements added to the sorted sets, not including
+	 *         elements already existing for which the score was updated.
+	 * @throws Exception
+	 */
+	public Long appendZSet(String key, Map<Double, String> scoreMembers)
+			throws Exception {
+		JedisAssert.assertNotNulls(key, scoreMembers);
+		return this.jedis.zadd(key, scoreMembers);
+	}
+
+	/**
+	 * Remove the specified member from the sorted set value stored at key. If
+	 * member was not a member of the set no operation is performed. If key does
+	 * not not hold a set value an error is returned.
+	 * 
+	 * @param key
+	 * @param members
+	 * @return The number of members removed from the sorted set, not including
+	 *         non existing members.
+	 * @throws Exception
+	 */
+	public Long removeElementsZSet(String key, String... members)
+			throws Exception {
+		JedisAssert.assertNotNulls(key, members);
+		return this.jedis.zrem(key, members);
+	}
+
+	/**
+	 * Remove all the elements in the sorted set at key with a score between min
+	 * and max (including elements with score equal to min or max).
+	 * 
+	 * @see {@link redis.clients.jedis.ShardedJedis#zremrangeByScore(String, double, double)}
+	 * @param key
+	 * @param start
+	 * @param end
+	 * @return The number of elements removed
+	 */
+	public Long removeElementsZSetByScore(String key, double start, double end) {
+		JedisAssert.assertNotNulls(key, start, end);
+		return this.jedis.zremrangeByScore(key, start, end);
+	}
+
+	/**
+	 * Remove all elements in the sorted set at key with rank between start and
+	 * end. Start and end are 0-based with rank 0 being the element with the
+	 * lowest score. Both start and end can be negative numbers, where they
+	 * indicate offsets starting at the element with the highest rank. For
+	 * example: -1 is the element with the highest score, -2 the element with
+	 * the second highest score and so forth.
+	 * 
+	 * @param key
+	 * @param start
+	 * @param end
+	 * @return The number of elements removed
+	 * @throws Exception
+	 */
+	public Long removeElementsZSetByIndex(String key, long start, long end)
+			throws Exception {
+		JedisAssert.assertNotNulls(key, start, end);
+		return this.jedis.zremrangeByRank(key, start, end);
+	}
+
+	/**
+	 * Returns the specified range of elements in the sorted set stored at key.
+	 * The elements are considered to be ordered from the LOWEST to the HIGHEST
+	 * score. Lexicographical order is used for elements with equal score.
+	 * 
+	 * Both start and stop are zero-based indexes, where 0 is the first element,
+	 * 1 is the next element and so on. They can also be negative numbers
+	 * indicating offsets from the end of the sorted set, with -1 being the last
+	 * element of the sorted set, -2 the penultimate element and so on. Out of
+	 * range indexes will not produce an error. If start is larger than the
+	 * largest index in the sorted set, or start > stop, an empty list is
+	 * returned. If stop is larger than the end of the sorted set Redis will
+	 * treat it like it is the last element of the sorted set.
+	 * 
+	 * @param key
+	 * @param start
+	 * @param end
+	 * @return list of elements in the specified range.
+	 * @throws Exception
+	 */
+	public Set<String> getRangeZSet(String key, long start, long end)
+			throws Exception {
+		JedisAssert.assertNotNulls(key, start, end);
+		return this.jedis.zrange(key, start, end);
+	}
+
+	/**
+	 * Returns the specified range of elements with relative score in the sorted
+	 * set stored at key.
+	 * 
+	 * @see {@link #getRangeZSet(String, long, long)}
+	 * @param key
+	 * @param start
+	 * @param end
+	 * @return list of elements in the specified range with their scores
+	 * @throws Exception
+	 */
+	public Set<Tuple> getRangeZSetWithScores(String key, long start, long end)
+			throws Exception {
+		JedisAssert.assertNotNulls(key, start, end);
+		return this.jedis.zrangeWithScores(key, start, end);
+	}
+
+	/**
+	 * Returns the specified range of elements in the sorted set stored at key.
+	 * The elements are considered to be ordered from the lowest to the highest
+	 * score. Lexicographical order is used for elements with equal score.
+	 * 
+	 * @param key
+	 * @param min
+	 * @param max
+	 * @return Multi bulk reply specifically a list of elements in the specified
+	 *         score range, with no relatvie socre
+	 * @throws Exception
+	 */
+	public Set<String> getRangeZSetByScore(String key, double min, double max)
+			throws Exception {
+		JedisAssert.assertNotNulls(key, min, max);
+		return this.jedis.zrangeByScore(key, min, max);
+	}
+
+	/**
+	 * Returns the specified range of elements with relative score in the sorted
+	 * set stored at key.
+	 * 
+	 * @see {@link #getRangeZSetByScore(String, double, double)}
+	 * @param key
+	 * @param min
+	 * @param max
+	 * @return Multi bulk reply specifically a list of elements in the specified
+	 *         score range, with relative score
+	 * @throws Exception
+	 */
+	public Set<Tuple> getRangeZSetByScoreWithScores(String key, double min,
+			double max) throws Exception {
+		JedisAssert.assertNotNulls(key, min, max);
+		return this.jedis.zrangeByScoreWithScores(key, min, max);
+	}
+
+	/**
+	 * Return the rank (or index) or member in the sorted set at key, with
+	 * scores being ordered from low to high.
+	 * <p>
+	 * When the given member does not exist in the sorted set, the null is
+	 * returned. The returned rank (or index) of the member is 0-based for both
+	 * commands.
+	 * 
+	 * @param key
+	 * @param member
+	 * @return The rank (or index) or member in the sorted set at key
+	 * @throws Exception
+	 */
+	public Long getIndexZSet(String key, String member) throws Exception {
+		JedisAssert.assertNotNulls(key, member);
+		return this.jedis.zrank(key, member);
+	}
+
+	/**
+	 * Return the sorted set cardinality (number of elements). If the key does
+	 * not exist 0 is returned, like for empty sorted sets.
+	 * 
+	 * @param key
+	 * @return The number os elements in the set with the key
+	 * @throws Exception
+	 */
+	public Long getLengthZSet(String key) throws Exception {
+		JedisAssert.assertNotNulls(key);
+		return this.jedis.zcard(key);
+	}
+
+	/**
+	 * Returns the number of elements in the sorted set at key with a score
+	 * between min and max, including elements with score equal to min or max
+	 * 
+	 * @param key
+	 * @param min
+	 * @param max
+	 * @return The number of element
+	 * @throws Exception
+	 */
+	public Long getCountZSetByScores(String key, double min, double max)
+			throws Exception {
+		JedisAssert.assertNotNulls(key, min, max);
+		return this.jedis.zcount(key, min, max);
+	}
+
+	/**
+	 * Return the score of the specified element of the sorted set at key. If
+	 * the specified element does not exist in the sorted set, or the key does
+	 * not exist at all, null is returned.
+	 * 
+	 * @param key
+	 * @param member
+	 * @return The score of the element
+	 * @throws Exception
+	 */
+	public Double getScoreOfMemberZSet(String key, String member)
+			throws Exception {
+		JedisAssert.assertNotNulls(key, member);
+		return this.jedis.zscore(key, member);
 	}
 
 	/**
@@ -425,7 +657,7 @@ public class GenericCacheWrapper implements CacheWrapper {
 	 * 
 	 * @return The ShardedJedis instance
 	 */
-	public ShardedJedis getJedisInstance() {
+	public ShardedJedis getJedis4AdvUse() {
 		return this.jedis;
 	}
 
