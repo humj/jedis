@@ -92,7 +92,7 @@ public class GenericCacheWrapper implements CacheWrapper {
 	 * @param seconds
 	 * 
 	 */
-	public void setStringExpiredIn(String key, String value, int seconds)
+	public void setStringWithExpiredIn(String key, String value, int seconds)
 			throws Exception {
 		JedisAssert.assertNotNulls(key, value, seconds);
 		this.jedis.setex(key, seconds, value);
@@ -150,7 +150,7 @@ public class GenericCacheWrapper implements CacheWrapper {
 	 * @param seconds
 	 * @return
 	 */
-	public Long setBeanExpiredIn(String key, String field, String value,
+	public Long setBeanWithExpiredIn(String key, String field, String value,
 			int seconds) throws Exception {
 		JedisAssert.assertNotNulls(key, field, value, seconds);
 		Long resp = this.setBean(key, field, value);
@@ -168,7 +168,7 @@ public class GenericCacheWrapper implements CacheWrapper {
 	 * @return If success, return "OK"; or throw an exception
 	 * @throws Exception
 	 */
-	public String setBeanExpiredIn(String key, Map<String, String> hashes,
+	public String setBeanWithExpiredIn(String key, Map<String, String> hashes,
 			int seconds) throws Exception {
 		JedisAssert.assertNotNulls(key, hashes, seconds);
 		String resp = this.setBean(key, hashes);
@@ -231,6 +231,39 @@ public class GenericCacheWrapper implements CacheWrapper {
 	public Long leftPushList(String key, String... strings) throws Exception {
 		JedisAssert.assertNotNulls(key, strings);
 		return this.jedis.lpush(key, strings);
+	}
+
+	/**
+	 * Push elements into the list with the key from left side and set list expired
+	 * 
+	 * @see {@link #leftPushList(String, String...) and {@link #setExpiredIn(String, int)
+	 * @param key
+	 * @param strings
+	 * @return
+	 * @throws Exception
+	 */
+	public Long leftPushAndSetListExpiredIn(String key, int seconds,
+			String... strings) throws Exception {
+		Long resp = this.leftPushList(key, strings);
+		this.setExpiredIn(key, seconds);
+		return resp;
+	}
+
+	/**
+	 * Push elements into the list with the key from right side and set list expired
+	 * 
+	 * @see {@link #rightPushList(String, String...) and {@link #setExpiredIn(String, int)
+	 * @param key
+	 * @param seconds
+	 * @param strings
+	 * @return
+	 * @throws Exception
+	 */
+	public Long rightPushAndSetListExpiredIn(String key, int seconds,
+			String... strings) throws Exception {
+		Long resp = this.rightPushList(key, strings);
+		this.setExpiredIn(key, seconds);
+		return resp;
 	}
 
 	/**
@@ -657,7 +690,7 @@ public class GenericCacheWrapper implements CacheWrapper {
 	 * 
 	 * @return The ShardedJedis instance
 	 */
-	public ShardedJedis getJedis4AdvUse() {
+	public ShardedJedis unwrapperJedis() {
 		return this.jedis;
 	}
 
