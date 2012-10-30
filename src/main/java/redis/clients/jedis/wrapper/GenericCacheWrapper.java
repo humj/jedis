@@ -233,7 +233,7 @@ public class GenericCacheWrapper implements CacheWrapper {
 		return this.jedis.lpush(key, strings);
 	}
 
-	/**
+/**
 	 * Push elements into the list with the key from left side and set list expired
 	 * 
 	 * @see {@link #leftPushList(String, String...) and {@link #setExpiredIn(String, int)
@@ -249,7 +249,7 @@ public class GenericCacheWrapper implements CacheWrapper {
 		return resp;
 	}
 
-	/**
+/**
 	 * Push elements into the list with the key from right side and set list expired
 	 * 
 	 * @see {@link #rightPushList(String, String...) and {@link #setExpiredIn(String, int)
@@ -482,6 +482,49 @@ public class GenericCacheWrapper implements CacheWrapper {
 			throws Exception {
 		JedisAssert.assertNotNulls(key, scoreMembers);
 		return this.jedis.zadd(key, scoreMembers);
+	}
+
+	/**
+	 * Add the specified member having the specifeid score to the sorted set
+	 * stored at key. If member is already a member of the sorted set the score
+	 * is updated, and the element reinserted in the right position to ensure
+	 * sorting. And set the expired time.
+	 * 
+	 * @param key
+	 * @param score
+	 * @param member
+	 * @param seconds
+	 * @return
+	 * @throws Exception
+	 */
+	public Long appendZSetAndZSetExpiredIn(String key, double score,
+			String member, int seconds) throws Exception {
+		JedisAssert.assertNotNulls(key, score, member);
+		Long resp = this.jedis.zadd(key, score, member);
+		this.setExpiredIn(key, seconds);
+		return resp;
+	}
+
+	/**
+	 * Adds all the specified members with the specified scores to the sorted
+	 * set stored at key. It is possible to specify multiple score/member pairs.
+	 * If a specified member is already a member of the sorted set, the score is
+	 * updated and the element reinserted at the right position to ensure the
+	 * correct ordering. And set the expired time.
+	 * 
+	 * @param key
+	 * @param score
+	 * @param member
+	 * @param seconds
+	 * @return
+	 * @throws Exception
+	 */
+	public Long appendZSetAndZSetExpiredIn(String key,
+			Map<Double, String> scoreMembers, int seconds) throws Exception {
+		JedisAssert.assertNotNulls(key, scoreMembers, seconds);
+		Long resp = this.appendZSet(key, scoreMembers);
+		this.setExpiredIn(key, seconds);
+		return resp;
 	}
 
 	/**
