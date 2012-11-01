@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import redis.clients.jedis.Jedis;
 import redis.clients.jedis.ShardedJedis;
 import redis.clients.jedis.ShardedJedisPool;
 import redis.clients.jedis.Tuple;
@@ -29,19 +28,6 @@ public class GenericCacheWrapper implements CacheWrapper {
 	public GenericCacheWrapper() {
 		JedisAssert.assertNotNulls(pool);
 		this.jedis = pool.getResource();
-	}
-
-	/**
-	 * Set the expired time of the <i>key</i> at <i>milliseconds</i> time
-	 * 
-	 * @see {@link redis.clients.jedis.ShardedJedis#expireAt(String, long)}
-	 * @param key
-	 * @param milliseconds
-	 * 
-	 */
-	public void setExpiredAt(String key, long milliseconds) throws Exception {
-		JedisAssert.assertNotNulls(key, milliseconds);
-		this.jedis.expireAt(key, milliseconds);
 	}
 
 	/**
@@ -210,7 +196,9 @@ public class GenericCacheWrapper implements CacheWrapper {
 	 * 
 	 * @see {@link redis.clients.jedis.ShardedJedis#hgetAll(String)}
 	 * @param key
-	 * @return All the fields and values contained into a hash.
+	 * @return All the fields and values contained into a hash, if the key
+	 *         doesn't exists or the value of key is empty, return empty
+	 *         Map<String,String>
 	 * @throws Exception
 	 */
 	public Map<String, String> getBean(String key) throws Exception {
@@ -309,7 +297,7 @@ public class GenericCacheWrapper implements CacheWrapper {
 		return this.jedis.rpop(key);
 	}
 
-/**
+	/**
 	 * Trim an existing list so that it will contain only the specified range of
      * elements specified. Start and end are zero-based indexes. 0 is the first
      * element of the list (the list head), 1 the next element and so on.
@@ -321,17 +309,18 @@ public class GenericCacheWrapper implements CacheWrapper {
      * end of the list. For example -1 is the last element of the list, -2 the
      * penultimate element and so on.
      * 
+     * Indexes out of range will not produce an error: if start is over the end
+     * of the list, or start > end, AN EMPTY LIST is left as value.
+     * 
 	 * @see {@link redis.clients.jedis.ShardedJedis#ltrim(String, long, long)
 	 * @param key
 	 * @param start
 	 * @param end
-	 * @return Indexes out of range will not produce an error: if start is over the end
-     * of the list, or start > end, AN EMPTY LIST is left as value.
 	 * @throws Exception
 	 */
-	public String trimList(String key, long start, long end) throws Exception {
+	public void trimList(String key, long start, long end) throws Exception {
 		JedisAssert.assertNotNulls(key, start, end);
-		return this.jedis.ltrim(key, start, end);
+		this.jedis.ltrim(key, start, end);
 	}
 
 	/**
@@ -375,7 +364,7 @@ public class GenericCacheWrapper implements CacheWrapper {
 	 * @return The number of removed elements successfully
 	 * @throws Exception
 	 */
-	public Long removeAllElementEquealsToInList(String key, String value)
+	public Long removeAllEqualElementsInList(String key, String value)
 			throws Exception {
 		JedisAssert.assertNotNulls(key, value);
 		return this.removeElementsEqualsToInList(key, 0, value);
@@ -391,7 +380,7 @@ public class GenericCacheWrapper implements CacheWrapper {
 	 * @return The number of removed elements successfully
 	 * @throws Exception
 	 */
-	public Long removeElementEqualsToL2RInList(String key, String value,
+	public Long removeL2REqualElementInList(String key, String value,
 			long count) throws Exception {
 		JedisAssert.assertNotNulls(key, value, count);
 		return this.removeElementsEqualsToInList(key, Math.abs(count), value);
@@ -407,7 +396,7 @@ public class GenericCacheWrapper implements CacheWrapper {
 	 * @return The number of removed elements successfully
 	 * @throws Exception
 	 */
-	public Long removeElementEqualsToR2LInList(String key, String value,
+	public Long removeR2LEqualElementInList(String key, String value,
 			long count) throws Exception {
 		JedisAssert.assertNotNulls(key, value, count);
 		return this.removeElementsEqualsToInList(key, 0 - Math.abs(count),
