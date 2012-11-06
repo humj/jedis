@@ -519,12 +519,12 @@ public class GenericCacheWrapper implements CacheWrapper {
 	/**
 	 * Remove the specified member from the sorted set value stored at key. If
 	 * member was not a member of the set no operation is performed. If key does
-	 * not not hold a set value an error is returned.
+	 * not hold a set value 0 is returned.
 	 * 
 	 * @param key
 	 * @param members
 	 * @return The number of members removed from the sorted set, not including
-	 *         non existing members.
+	 *         non existing members. Or 0 is returned when key/member doesn't exits
 	 * @throws Exception
 	 */
 	public Long removeElementsZSet(String key, String... members)
@@ -541,7 +541,7 @@ public class GenericCacheWrapper implements CacheWrapper {
 	 * @param key
 	 * @param start
 	 * @param end
-	 * @return The number of elements removed
+	 * @return The number of elements removed, or 0 is returned when key/member doesn't exits
 	 */
 	public Long removeElementsZSetByScore(String key, double start, double end) {
 		JedisAssert.assertNotNulls(key, start, end);
@@ -559,7 +559,7 @@ public class GenericCacheWrapper implements CacheWrapper {
 	 * @param key
 	 * @param start
 	 * @param end
-	 * @return The number of elements removed
+	 * @return The number of elements removed, or 0 is returned when key/member doesn't exits
 	 * @throws Exception
 	 */
 	public Long removeElementsZSetByIndex(String key, long start, long end)
@@ -584,14 +584,14 @@ public class GenericCacheWrapper implements CacheWrapper {
 	 * 
 	 * @param key
 	 * @param start
-	 * @param end
+	 * @param stop
 	 * @return list of elements in the specified range.
 	 * @throws Exception
 	 */
-	public Set<String> getRangeZSet(String key, long start, long end)
+	public Set<String> getRangeZSet(String key, long start, long stop)
 			throws Exception {
-		JedisAssert.assertNotNulls(key, start, end);
-		return this.jedis.zrange(key, start, end);
+		JedisAssert.assertNotNulls(key, start, stop);
+		return this.jedis.zrange(key, start, stop);
 	}
 
 	/**
@@ -601,14 +601,14 @@ public class GenericCacheWrapper implements CacheWrapper {
 	 * @see {@link #getRangeZSet(String, long, long)}
 	 * @param key
 	 * @param start
-	 * @param end
+	 * @param stop
 	 * @return list of elements in the specified range with their scores
 	 * @throws Exception
 	 */
-	public Set<Tuple> getRangeZSetWithScores(String key, long start, long end)
+	public Set<Tuple> getRangeZSetWithScores(String key, long start, long stop)
 			throws Exception {
-		JedisAssert.assertNotNulls(key, start, end);
-		return this.jedis.zrangeWithScores(key, start, end);
+		JedisAssert.assertNotNulls(key, start, stop);
+		return this.jedis.zrangeWithScores(key, start, stop);
 	}
 
 	/**
@@ -673,7 +673,7 @@ public class GenericCacheWrapper implements CacheWrapper {
 	 * @return The number os elements in the set with the key
 	 * @throws Exception
 	 */
-	public Long getLengthZSet(String key) throws Exception {
+	public Long getZSetLength(String key) throws Exception {
 		JedisAssert.assertNotNulls(key);
 		return this.jedis.zcard(key);
 	}
