@@ -5,14 +5,17 @@ package redis.clients.jedis.wrapper.tests;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import redis.clients.jedis.Tuple;
 import redis.clients.jedis.wrapper.GenericCacheWrapper;
 
 /**
@@ -227,6 +230,57 @@ public class GenericCacheWrapperTest extends Assert {
 		}
 	}
 
+	/**
+	 * Test method for
+	 * {@link redis.clients.jedis.wrapper.GenericCacheWrapper#appendZSet(String, double, String)}
+	 * {@link redis.clients.jedis.wrapper.GenericCacheWrapper#appendZSet(String, Map)}
+	 * {@link redis.clients.jedis.wrapper.GenericCacheWrapper#getZSetLength(String)}
+	 * {@link redis.clients.jedis.wrapper.GenericCacheWrapper#getCountZSetByScores(String, double, double)}
+	 * {@link redis.clients.jedis.wrapper.GenericCacheWrapper#getIndexZSet(String, String)}
+	 * {@link redis.clients.jedis.wrapper.GenericCacheWrapper#getRangeZSet(String, long, long)}
+	 * {@link redis.clients.jedis.wrapper.GenericCacheWrapper#getRangeZSetByScoreWithScores(String, double, double)}
+	 * {@link redis.clients.jedis.wrapper.GenericCacheWrapper
+	 * 
+	 * 
+	 */
+	@Test
+	public void testZSetOpr() {
+		try {
+			// Test for wrapper.appendZSet(key, score, value)
+			wrapper.appendZSet(key1, 15.0, "im 15");
+			// Test for wrapper.appendZSet(key, map<score, value>)
+			Map<Double, String> scoreMembersMap = new HashMap<Double, String>();
+			scoreMembersMap.put(10.0, "im 10");
+			scoreMembersMap.put(20.0, "im 20");
+			wrapper.appendZSet(key1, scoreMembersMap);
+			// Test for wrapper.getZSetLength()
+			assertEquals(Long.valueOf(3), wrapper.getZSetLength(key1));
+			// Test for wrapper.getCountZSetByScores(key, min, max)
+			assertEquals(Long.valueOf(2), wrapper.getCountZSetByScores(key1, 15.0, 20.0));
+			// Test for wrapper.getIndexZSet(key, member)
+			assertEquals(Long.valueOf(1), wrapper.getIndexZSet(key1, "im 15"));
+			assertNull(wrapper.getIndexZSet(key1, "im null"));
+			// Test for wrapper.getRangeZSet(key, start, stop)
+			Set<String> respSet = new HashSet<String>();
+			respSet.add("im 10"); respSet.add("im 15"); respSet.add("im 20");
+			assertEquals(respSet, wrapper.getRangeZSet(key1, 0, -1));
+			// Test for wrapper.getRangeZSetByScoreWithScores(key, minScore, maxScore)
+			Set<Tuple> tupleSet = new HashSet<Tuple>();
+			tupleSet.add(new Tuple("im 15", 15.0));
+			tupleSet.add(new Tuple("im 20", 20.0));
+			assertEquals(tupleSet, wrapper.getRangeZSetByScoreWithScores(key1, 15.0, 20.0));
+			// Test for wrapper.removeElementsZSet(key, member)
+			System.out.println(wrapper.removeElementsZSet("key2", "members"));
+			assertEquals(Long.valueOf(0), wrapper.removeElementsZSet("key2", "members"));
+			// Test for wrapper.
+			wrapper.removeElementsZSet(key1, "im 15");
+			assertEquals(Long.valueOf(2), wrapper.getZSetLength(key1));
+			
+		} catch (Exception e) {
+			
+		}
+	}
+	
 	/**
 	 * Test method for
 	 * {@link redis.clients.jedis.wrapper.GenericCacheWrapper#appendZSet(java.lang.String, double, java.lang.String)}
